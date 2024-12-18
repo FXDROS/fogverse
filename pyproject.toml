@@ -4,7 +4,6 @@ build-backend = "hatchling.build"
 
 [project]
 name = "Fogverse"
-version = "1.0"
 dynamic = ["version"]
 requires-python = ">= 3.9"
 dependencies = [
