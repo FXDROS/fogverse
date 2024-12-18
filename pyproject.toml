@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "Fogverse"
+version = "1.0"
+dynamic = ["version"]
+requires-python = ">= 3.9"
+dependencies = [
+    "aiokafka>=0.12.0",
+    "async-timeout>=5.0.1",
+    "confluent-kafka>=2.6.1",
+    "numpy>=2.2.0",
+    "opencv-python>=4.10.0.84",
+    "packaging>=24.2",
+    "PyYAML>=6.0.2",
+    "typing_extensions>=4.12.2",
+]
+authors = [
+    {name = "Computer Science Lab of University of Indonesia", email = ""},
+]
+description = "..."
+readme = "README.md"
+license = {text = "MIT License"}
+keywords = ["internet of things", "fog computing", "edge computing", "real-time", "video preprocessing"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Education",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = ""
+Documentation = ""
+Repository = "https://github.com/fogverse/fogverse.git"
+
+[project.optional-dependencies]
+torch = ["torch>=1.7.0", "torch!=1.12.0"]
+torchvision = ["torchvision>=0.8.1", "torchvision!=0.13.0"]
+
+[project.scripts]
+fogverse = ""
