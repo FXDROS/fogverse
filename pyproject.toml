@@ -48,6 +48,3 @@ Repository = "https://github.com/fogverse/fogverse.git"
 [project.optional-dependencies]
 torch = ["torch>=1.7.0", "torch!=1.12.0"]
 torchvision = ["torchvision>=0.8.1", "torchvision!=0.13.0"]
-
-[project.scripts]
-fogverse = ""
