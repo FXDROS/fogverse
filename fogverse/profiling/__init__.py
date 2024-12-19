@@ -7,9 +7,9 @@ import socket
 import time
 
 from .base import AbstractProfiling
+from fogverse.logger import FogVerseLogging
 from fogverse.utils import get_header, size_kb
 from fogverse.utils.datetime import calc_datetime, get_timestamp, get_timestamp_str
-from fogverse.utils.logging import FogVerseLogging
 
 from aiokafka import ConsumerRecord, AIOKafkaProducer as _AIOKafkaProducer
 

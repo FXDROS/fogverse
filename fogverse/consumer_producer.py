@@ -8,9 +8,9 @@ from aiokafka import (
     AIOKafkaConsumer as _AIOKafkaConsumer,
     AIOKafkaProducer as _AIOKafkaProducer
 )
-from fogverse.utils import get_config
-from fogverse.utils.logging import FogVerseLogging
 from .base import AbstractConsumer, AbstractProducer
+from fogverse.logger import FogVerseLogging
+from fogverse.utils import get_config
 
 class AIOKafkaConsumer(AbstractConsumer):
     def __init__(self, loop=None):

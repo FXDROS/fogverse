@@ -14,7 +14,7 @@ from confluent_kafka import admin
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 from fogverse.admin import create_topics, read_topic_yaml
 from fogverse.constants import *
-from fogverse.utils.logging import FogVerseLogging
+from fogverse.logger import FogVerseLogging
 from pathlib import Path
 
 _default_topic_config = {
