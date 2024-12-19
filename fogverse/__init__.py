@@ -1,6 +1,6 @@
 import asyncio
 
-from fogverse.util import calc_datetime, get_timestamp
+from fogverse.utils.datetime import calc_datetime, get_timestamp
 
 from .consumer_producer import (
     AIOKafkaConsumer, AIOKafkaProducer, OpenCVConsumer

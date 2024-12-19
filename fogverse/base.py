@@ -2,8 +2,9 @@ import asyncio
 import numpy as np
 import cv2
 
-from .util import bytes_to_numpy, numpy_to_bytes, compress_encoding
 from pickle import UnpicklingError
+from fogverse.utils.numpy import bytes_to_numpy, numpy_to_bytes
+from fogverse.utils.image_process import compress_encoding
 
 class AbstractConsumer:
     async def start_consumer(self):
