@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "Fogverse"
-version = "1.0"
+dynamic = ["version"]
 requires-python = ">= 3.9"
 dependencies = [
     "aiokafka>=0.12.0",
@@ -46,6 +46,12 @@ classifiers = [
 Homepage = ""
 Documentation = ""
 Repository = "https://github.com/fogverse/fogverse.git"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "_version.py"
 
 # TODO: create project script
 # [project.scripts]
