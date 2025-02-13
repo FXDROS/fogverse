@@ -15,8 +15,6 @@ dependencies = [
     "packaging>=24.2",
     "PyYAML>=6.0.2",
     "typing_extensions>=4.12.2",
-    "torch>=1.7.0, !=1.12.0",
-    "torchvision>=0.8.1, !=0.13.0",
 ]
 authors = [
     {name = "Computer Science Lab of University of Indonesia", email = ""},
