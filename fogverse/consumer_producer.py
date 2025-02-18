@@ -9,8 +9,8 @@ from aiokafka import (
     AIOKafkaConsumer as _AIOKafkaConsumer,
     AIOKafkaProducer as _AIOKafkaProducer
 )
-from .base import AbstractConsumer, AbstractProducer
-from confluent_kafka import Consumer, Message
+from .base import AbstractConsumer, AbstractProducer, AbstractProcessor
+from confluent_kafka import Consumer, Message, Producer
 from fogverse.logger import FogVerseLogging, get_logger
 from fogverse.utils import get_config
 from threading import Event
@@ -70,18 +70,18 @@ class AIOKafkaConsumer(AbstractConsumer):
             logger.std_log('Consumer has closed.')
 
 class ConfluentConsumer:
-    def __init__(self, consumer_auto_scaler):
+    def __init__(self):
         self._topic_pattern = get_config('TOPIC_PATTERN', self)
-        self._consumer_topic = get_config('CONSUMER_TOPIC', self)
+        self.log = get_logger(name=self.__class__.__name__)
+        self._group_id  = get_config('GROUP_ID', self, str(uuid.uuid4()))
+        self._poll_time = get_config('POLL_TIME', self, 1.0)
+        self._batch_size = get_config('BATCH_SIZE', self, 1)
 
         self._consumer_servers = get_config('CONSUMER_SERVERS', self,
                                              'localhost')
-        self._group_id  = get_config('GROUP_ID', self, str(uuid.uuid4()))
+        self._consumer_topic = get_config('CONSUMER_TOPIC', self)
         self._consumer_id = get_config('CONSUMER_ID', self, str(uuid.uuid4()))
-        self._poll_time = get_config('POLL_TIME', self, 1.0)
-        self._batch_size = get_config('BATCH_SIZE', self, 1)
-        self.consumer_auto_scaler = consumer_auto_scaler
-        self.log = get_logger(name=self.__class__.__name__)
+        self.consumer_auto_scaler = getattr(self, 'consumer_auto_scaler', None)
 
         self.consumer_conf = getattr(self, 'consumer_conf', {})
         self.consumer = Consumer({
@@ -90,6 +90,7 @@ class ConfluentConsumer:
             'client.id':  get_config('CLIENT_ID', self, socket.gethostname()),
             **self.consumer_conf
         })
+
 
     def _add_to_queue(self, consumed_messages, queue: queue.Queue):
         if  not consumed_messages:
@@ -153,6 +154,64 @@ class AIOKafkaProducer(AbstractProducer):
         logger = getattr(self, '_log', None)
         if isinstance(logger, FogVerseLogging):
             logger.std_log('Producer has closed.')
+
+class ConfluentProducer:
+    def __init__(self, callback = False):
+        self._callback = callback
+        self._batch_size = get_config('BATCH_SIZE', self, 1)
+        self.processor: AbstractProcessor = getattr(self, 'processor', None)
+        self.log = get_logger(name=self.__class__.__name__)
+
+        self.producer_queue = queue
+        self.producer_topic = get_config('PRODUCER_TOPIC', self)
+        self._producer_servers = get_config('PRODUCER_SERVERS', self)
+        self.producer_callback = getattr(self, 'producer_callback', None)
+        self.producer_on_complete = getattr(self, 'producer_on_complete', None)
+
+        self._producer_conf = getattr(self, 'producer_conf', {})
+        self.producer = Producer({
+            'bootstrap.servers': self._producer_servers,
+            'client.id':  get_config('CLIENT_ID', self, socket.gethostname()),
+            **self._producer_conf
+        })
+
+    def start_producer(self, queue: queue.Queue, stop_event: Event):
+        try:
+            message_batch: list[Message] = []
+            while not stop_event.is_set():
+                message: Message = queue.get()
+                if self.producer_callback and not self._callback:
+                    self._callback = True
+                    self.producer_callback(lambda x, y:
+                                           self.producer.produce(topic=x, value=y))
+
+                if message is None:
+                    continue
+                elif message.error():
+                    self.log.error(message.error())
+
+                message_batch.append(message)
+
+                if len(message_batch) < self._batch_size:
+                    continue
+                else:
+                    total_messages = len(message_batch)
+                    results: list[bytes] = self.processor.process(message_batch)
+                    for result in results:
+                        self.producer.produce(topic=self.topic, value=result)
+                        self.producer.flush()
+                    queue.task_done()
+                    message_batch.clear()
+                    self.producer_on_complete(
+                        self.topic,
+                        total_messages,
+                        lambda x, y: self.producer.produce(
+                            topic=x,
+                            value=y
+                        )
+                    )
+        except Exception as e:
+            self.log.error(e)
 
 def _get_cv_video_capture(device=0):
     import cv2
