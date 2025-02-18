@@ -1,5 +1,6 @@
 import asyncio
 import os
+import queue
 import socket
 import sys
 import uuid
@@ -9,8 +10,10 @@ from aiokafka import (
     AIOKafkaProducer as _AIOKafkaProducer
 )
 from .base import AbstractConsumer, AbstractProducer
-from fogverse.logger import FogVerseLogging
+from confluent_kafka import Consumer, Message
+from fogverse.logger import FogVerseLogging, get_logger
 from fogverse.utils import get_config
+from threading import Event
 
 class AIOKafkaConsumer(AbstractConsumer):
     def __init__(self, loop=None):
@@ -65,6 +68,54 @@ class AIOKafkaConsumer(AbstractConsumer):
         logger = getattr(self, '_log', None)
         if isinstance(logger, FogVerseLogging):
             logger.std_log('Consumer has closed.')
+
+class ConfluentConsumer:
+    def __init__(self, consumer_auto_scaler):
+        self._topic_pattern = get_config('TOPIC_PATTERN', self)
+        self._consumer_topic = get_config('CONSUMER_TOPIC', self)
+
+        self._consumer_servers = get_config('CONSUMER_SERVERS', self,
+                                             'localhost')
+        self._group_id  = get_config('GROUP_ID', self, str(uuid.uuid4()))
+        self._consumer_id = get_config('CONSUMER_ID', self, str(uuid.uuid4()))
+        self._poll_time = get_config('POLL_TIME', self, 1.0)
+        self._batch_size = get_config('BATCH_SIZE', self, 1)
+        self.consumer_auto_scaler = consumer_auto_scaler
+        self.log = get_logger(name=self.__class__.__name__)
+
+        self.consumer_conf = getattr(self, 'consumer_conf', {})
+        self.consumer = Consumer({
+            'bootstrap.servers': self._consumer_servers,
+            'group.id': self._group_id,
+            'client.id':  get_config('CLIENT_ID', self, socket.gethostname()),
+            **self.consumer_conf
+        })
+
+    def _add_to_queue(self, consumed_messages, queue: queue.Queue):
+        if  not consumed_messages:
+            return queue.put(None)
+        for consumed_message in consumed_messages:
+            queue.put(consumed_message)
+
+    def start_confluent_consumer(self, stop_event: Event, queue:  queue.Queue):
+        if self.consumer_auto_scaler is not None:
+            self.consumed_messages = self.consumer_auto_scaler.start_with_distributed_lock(
+                self.consumer,
+                self._consumer_topic,
+                self._group_id,
+                self._consumer_id
+            )
+        else:
+            self.consumer.subscribe([self._consumer_topic])
+        self._add_to_queue(queue)
+
+        try:
+            while not stop_event.is_set():
+                messages: list[Message] = self.consumer.consume(self._batch_size, self._poll_time)
+                for message in messages:
+                    queue.put(message)
+        except Exception as e:
+            self.log.error(e)
 
 class AIOKafkaProducer(AbstractProducer):
     def __init__(self, loop=None):
