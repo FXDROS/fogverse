@@ -1,10 +1,10 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import queue
-from threading import Event
 import time
 import traceback
 
+from threading import Event
+from concurrent.futures import ThreadPoolExecutor
 from fogverse.consumer_producer import ConfluentKafkaConsumer, ConfluentKafkaProducer
 from fogverse.utils import get_config
 
