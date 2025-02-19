@@ -1,5 +1,12 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
+import queue
+from threading import Event
+import time
 import traceback
+
+from fogverse.consumer_producer import ConfluentKafkaConsumer, ConfluentKafkaProducer
+from fogverse.utils import get_config
 
 def _get_func(obj, func_name):
     func = getattr(obj, func_name, None)
@@ -75,3 +82,45 @@ class Runnable:
             _call_func(self, '_before_close')
             await self._close()
             _call_func(self, '_after_close')
+
+class ParallelExecutor:
+    def __init__(self):
+        self.consumer: ConfluentKafkaConsumer = getattr(self, 'consumer', None)
+        self.producer: ConfluentKafkaProducer = getattr(self, 'producer', None)
+        self.total_consumer = get_config('TOTAL_CONSUMER', 1)
+        self.total_producer = get_config('TOTAL_PRODUCER', 1)
+        self.queue = getattr(self, 'task_queue', queue.Queue())
+
+        self.consumer_tasks = []
+        self.producer_tasks = []
+
+    def run(self):
+        consumer_thread_pool = ThreadPoolExecutor(self.total_consumer)
+        producer_thread_pool = ThreadPoolExecutor(self.total_producer)
+        stop_event = Event()
+
+        try:
+            self.consumer_tasks = [
+                consumer_thread_pool.submit(
+                    self.consumer.start_confluent_consumer,
+                    self.queue,
+                    stop_event
+                )
+                for _ in range(self.total_consumer)
+            ]
+
+            self.producer_tasks = [
+                producer_thread_pool.submit(
+                    self.producer.start_confluent_producer,
+                    self.queue,
+                    stop_event
+                ) for _ in range(self.total_producer)
+            ]
+
+            while True:
+                time.sleep(10)
+
+        except KeyboardInterrupt:
+            stop_event.set()
+            consumer_thread_pool.shutdown(wait=False)
+            producer_thread_pool.shutdown(wait=False)

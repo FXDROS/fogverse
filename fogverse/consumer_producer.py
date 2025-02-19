@@ -91,7 +91,6 @@ class ConfluentKafkaConsumer:
             **self.consumer_conf
         })
 
-
     def _add_to_queue(self, consumed_messages, queue: queue.Queue):
         if  not consumed_messages:
             return queue.put(None)
@@ -175,7 +174,7 @@ class ConfluentKafkaProducer:
             **self._producer_conf
         })
 
-    def start_producer(self, queue: queue.Queue, stop_event: Event):
+    def start_confluent_producer(self, queue: queue.Queue, stop_event: Event):
         try:
             message_batch: list[Message] = []
             while not stop_event.is_set():
