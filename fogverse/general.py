@@ -84,9 +84,9 @@ class Runnable:
             _call_func(self, '_after_close')
 
 class ParallelExecutor:
-    def __init__(self):
-        self.consumer: ConfluentKafkaConsumer = getattr(self, 'consumer', None)
-        self.producer: ConfluentKafkaProducer = getattr(self, 'producer', None)
+    def __init__(self, consumer: ConfluentKafkaConsumer, producer: ConfluentKafkaProducer):
+        self.consumer = consumer
+        self.producer = producer
         self.total_consumer = get_config('TOTAL_CONSUMER', 1)
         self.total_producer = get_config('TOTAL_PRODUCER', 1)
         self.queue = getattr(self, 'task_queue', queue.Queue())
