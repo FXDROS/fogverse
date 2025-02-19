@@ -2,7 +2,7 @@ import cv2
 import uuid
 import os
 
-from fogverse.utils.numpy import numpy_to_bytes, bytes_to_numpy
+from fogverse.utils.fogverse_numpy import numpy_to_bytes, bytes_to_numpy
 
 def get_cam_id():
     return f"cam_{os.getenv('CAM_ID', str(uuid.uuid4()))}"
