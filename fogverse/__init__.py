@@ -3,7 +3,7 @@ import asyncio
 from fogverse.utils.datetime import calc_datetime, get_timestamp
 
 from .consumer_producer import (
-    AIOKafkaConsumer, AIOKafkaProducer, OpenCVConsumer
+    AIOKafkaConsumer, AIOKafkaProducer, ConfluentKafkaConsumer, ConfluentKafkaProducer, OpenCVConsumer
 )
 from .base import AbstractConsumer, AbstractProducer
 from .general import Runnable
@@ -13,7 +13,13 @@ from .manager import Manager
 class Producer(AbstractConsumer, AIOKafkaProducer, Runnable):
     pass
 
+class ParallelProducer(ConfluentKafkaProducer):
+    pass
+
 class Consumer(AIOKafkaConsumer, AbstractProducer, Runnable):
+    pass
+
+class ParallelConsumer(ConfluentKafkaConsumer):
     pass
 
 class ConsumerStorage(AbstractConsumer, AbstractProducer, Runnable):

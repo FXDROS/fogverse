@@ -69,7 +69,7 @@ class AIOKafkaConsumer(AbstractConsumer):
         if isinstance(logger, FogVerseLogging):
             logger.std_log('Consumer has closed.')
 
-class ConfluentConsumer:
+class ConfluentKafkaConsumer:
     def __init__(self):
         self._topic_pattern = get_config('TOPIC_PATTERN', self)
         self.log = get_logger(name=self.__class__.__name__)
@@ -155,7 +155,7 @@ class AIOKafkaProducer(AbstractProducer):
         if isinstance(logger, FogVerseLogging):
             logger.std_log('Producer has closed.')
 
-class ConfluentProducer:
+class ConfluentKafkaProducer:
     def __init__(self, callback = False):
         self._callback = callback
         self._batch_size = get_config('BATCH_SIZE', self, 1)
