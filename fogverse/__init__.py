@@ -6,20 +6,20 @@ from .consumer_producer import (
     AIOKafkaConsumer, AIOKafkaProducer, ConfluentKafkaConsumer, ConfluentKafkaProducer, OpenCVConsumer
 )
 from .base import AbstractConsumer, AbstractProducer
-from .general import Runnable
+from .general import ParallelExecutor, Runnable
 from .profiling import Profiling
 from .manager import Manager
 
 class Producer(AbstractConsumer, AIOKafkaProducer, Runnable):
     pass
 
-class ParallelProducer(ConfluentKafkaProducer):
+class ParallelProducer(ConfluentKafkaProducer, ParallelExecutor):
     pass
 
 class Consumer(AIOKafkaConsumer, AbstractProducer, Runnable):
     pass
 
-class ParallelConsumer(ConfluentKafkaConsumer):
+class ParallelConsumer(ConfluentKafkaConsumer, ParallelExecutor):
     pass
 
 class ConsumerStorage(AbstractConsumer, AbstractProducer, Runnable):

@@ -84,43 +84,49 @@ class Runnable:
             _call_func(self, '_after_close')
 
 class ParallelExecutor:
-    def __init__(self, consumer: ConfluentKafkaConsumer, producer: ConfluentKafkaProducer):
-        self.consumer = consumer
-        self.producer = producer
-        self.total_consumer = get_config('TOTAL_CONSUMER', 1)
-        self.total_producer = get_config('TOTAL_PRODUCER', 1)
+    def __init__(self):
+        self.consumer = getattr(self, 'consumer', None)
+        self.producer = getattr(self, 'producer', None)
+        self.total_consumer = get_config('TOTAL_CONSUMER', self, 1)
+        self.total_producer = get_config('TOTAL_PRODUCER', self, 1)
         self.queue = getattr(self, 'task_queue', queue.Queue())
 
         self.consumer_tasks = []
         self.producer_tasks = []
 
     def run(self):
-        consumer_thread_pool = ThreadPoolExecutor(self.total_consumer)
-        producer_thread_pool = ThreadPoolExecutor(self.total_producer)
+        if (self.consumer is not None):
+            consumer_thread_pool = ThreadPoolExecutor(self.total_consumer)
+        if (self.producer is not None):
+            producer_thread_pool = ThreadPoolExecutor(self.total_producer)
         stop_event = Event()
 
         try:
-            self.consumer_tasks = [
-                consumer_thread_pool.submit(
-                    self.consumer.start_confluent_consumer,
-                    self.queue,
-                    stop_event
-                )
-                for _ in range(self.total_consumer)
-            ]
+            if (self.consumer is not None):
+                self.consumer_tasks = [
+                    consumer_thread_pool.submit(
+                        self.consumer.start_confluent_consumer,
+                        self.queue,
+                        stop_event
+                    )
+                    for _ in range(self.total_consumer)
+                ]
 
-            self.producer_tasks = [
-                producer_thread_pool.submit(
-                    self.producer.start_confluent_producer,
-                    self.queue,
-                    stop_event
-                ) for _ in range(self.total_producer)
-            ]
+            if (self.producer is not None):
+                self.producer_tasks = [
+                    producer_thread_pool.submit(
+                        self.producer.start_confluent_producer,
+                        self.queue,
+                        stop_event
+                    ) for _ in range(self.total_producer)
+                ]
 
             while True:
                 time.sleep(10)
 
         except KeyboardInterrupt:
             stop_event.set()
-            consumer_thread_pool.shutdown(wait=False)
-            producer_thread_pool.shutdown(wait=False)
+            if (self.consumer is not None):
+                consumer_thread_pool.shutdown(wait=False)
+            if (self.producer is not None):
+                producer_thread_pool.shutdown(wait=False)
