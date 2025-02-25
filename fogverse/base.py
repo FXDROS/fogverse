@@ -97,8 +97,3 @@ class AbstractProducer:
             args, kwargs = [], {}
         coro = _call_callback_ack(args, kwargs)
         return asyncio.ensure_future(coro) # awaitable
-
-class AbstractProcessor(ABC):
-    @abstractmethod
-    def process(self, messages: list[Message]) -> list[bytes]:
-        pass

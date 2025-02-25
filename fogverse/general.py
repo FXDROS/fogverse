@@ -1,12 +1,5 @@
 import asyncio
-import queue
-import time
 import traceback
-
-from threading import Event
-from concurrent.futures import ThreadPoolExecutor
-from fogverse.consumer_producer import ConfluentKafkaConsumer, ConfluentKafkaProducer
-from fogverse.utils import get_config
 
 def _get_func(obj, func_name):
     func = getattr(obj, func_name, None)
@@ -82,51 +75,3 @@ class Runnable:
             _call_func(self, '_before_close')
             await self._close()
             _call_func(self, '_after_close')
-
-class ParallelExecutor:
-    def __init__(self):
-        self.consumer = getattr(self, 'consumer', None)
-        self.producer = getattr(self, 'producer', None)
-        self.total_consumer = get_config('TOTAL_CONSUMER', self, 1)
-        self.total_producer = get_config('TOTAL_PRODUCER', self, 1)
-        self.queue = getattr(self, 'task_queue', queue.Queue())
-
-        self.consumer_tasks = []
-        self.producer_tasks = []
-
-    def run(self):
-        if (self.consumer is not None):
-            consumer_thread_pool = ThreadPoolExecutor(self.total_consumer)
-        if (self.producer is not None):
-            producer_thread_pool = ThreadPoolExecutor(self.total_producer)
-        stop_event = Event()
-
-        try:
-            if (self.consumer is not None):
-                self.consumer_tasks = [
-                    consumer_thread_pool.submit(
-                        self.consumer.start_confluent_consumer,
-                        self.queue,
-                        stop_event
-                    )
-                    for _ in range(self.total_consumer)
-                ]
-
-            if (self.producer is not None):
-                self.producer_tasks = [
-                    producer_thread_pool.submit(
-                        self.producer.start_confluent_producer,
-                        self.queue,
-                        stop_event
-                    ) for _ in range(self.total_producer)
-                ]
-
-            while True:
-                time.sleep(10)
-
-        except KeyboardInterrupt:
-            stop_event.set()
-            if (self.consumer is not None):
-                consumer_thread_pool.shutdown(wait=False)
-            if (self.producer is not None):
-                producer_thread_pool.shutdown(wait=False)
