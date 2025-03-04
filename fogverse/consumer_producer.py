@@ -10,7 +10,6 @@ from aiokafka import (
 from .base import AbstractConsumer, AbstractProducer
 from fogverse.logger import FogVerseLogging
 from fogverse.utils import get_config
-from threading import Event
 
 class AIOKafkaConsumer(AbstractConsumer):
     def __init__(self, loop=None):

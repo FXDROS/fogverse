@@ -3,23 +3,15 @@ import asyncio
 from fogverse.utils.datetime import calc_datetime, get_timestamp
 
 from .consumer_producer import (
-    AIOKafkaConsumer, AIOKafkaProducer, ConfluentKafkaConsumer, ConfluentKafkaProducer, OpenCVConsumer
+    AIOKafkaConsumer, AIOKafkaProducer
 )
 from .base import AbstractConsumer, AbstractProducer
-from .general import ParallelExecutor, Runnable
-from .profiling import Profiling
-from .manager import Manager
+from .general import Runnable
 
 class Producer(AbstractConsumer, AIOKafkaProducer, Runnable):
     pass
 
-class ParallelProducer(ConfluentKafkaProducer, ParallelExecutor):
-    pass
-
 class Consumer(AIOKafkaConsumer, AbstractProducer, Runnable):
-    pass
-
-class ParallelConsumer(ConfluentKafkaConsumer, ParallelExecutor):
     pass
 
 class ConsumerStorage(AbstractConsumer, AbstractProducer, Runnable):
