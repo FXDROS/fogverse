@@ -2,8 +2,6 @@ import asyncio
 import numpy as np
 import cv2
 
-from abc import ABC, abstractmethod
-from confluent_kafka import Message
 from pickle import UnpicklingError
 from fogverse.utils.numpy import bytes_to_numpy, numpy_to_bytes
 from fogverse.utils.image_process import compress_encoding

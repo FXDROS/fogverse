@@ -1,6 +1,4 @@
 import asyncio
-import os
-import queue
 import socket
 import sys
 import uuid
